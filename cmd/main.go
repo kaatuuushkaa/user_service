@@ -15,20 +15,22 @@ func main() {
 		log.Fatalf("Could not connect to DB: %v", err)
 	}
 
-	repoUser := userService.NewUserRepositiry(database)
+	repoUser := userService.NewUserRepository(database)
 	serviceUser := userService.NewUserService(repoUser)
 	handlerUser := handlers.NewUserHandler(serviceUser)
 	handlerAuth := handlers.NewAuthHandler()
 
 	r := gin.Default()
 
-	r.POST("/login", handlerAuth.Login)
+	r.POST("/login", handlerAuth.LoginHandler)
 
-	auth := r.Group("/users")
-	auth.Use(middleware.JWTMiddleware())
+	users := r.Group("/users")
+	users.Use(middleware.JWTMiddleware())
 	{
-		auth.GET("/:id/status", handlerUser.GetUserById)
-		auth.GET("/leaderboard", handlerUser.GetLeaderboard)
+		users.GET("/:id/status", handlerUser.GetUserByIdHandler)
+		users.GET("/leaderboard", handlerUser.GetLeaderboardHandler)
+		users.POST("/:id/task/complete", handlerUser.PostTaskCompleteHandler)
+		users.POST("/:id/referrer", handlerUser.PostReferrerHandler)
 	}
 
 	r.Run(":8080")

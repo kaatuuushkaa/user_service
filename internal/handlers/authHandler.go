@@ -14,7 +14,7 @@ func NewAuthHandler() *AuthHandler {
 	return &AuthHandler{}
 }
 
-func (h *AuthHandler) Login(c *gin.Context) {
+func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	var body struct {
 		UserID int `json:"user_id"`
 	}
