@@ -18,32 +18,18 @@ func main() {
 	repoUser := userService.NewUserRepositiry(database)
 	serviceUser := userService.NewUserService(repoUser)
 	handlerUser := handlers.NewUserHandler(serviceUser)
+	handlerAuth := handlers.NewAuthHandler()
 
 	r := gin.Default()
 
-	users := r.Group("/users")
-	users.Use(middleware.JWTMiddleware())
+	r.POST("/login", handlerAuth.Login)
+
+	auth := r.Group("/users")
+	auth.Use(middleware.JWTMiddleware())
 	{
-		users.GET("/:id/status", handlerUser.GetUserById)
-		users.GET("/leaderboard", handlerUser.GetLeaderboard)
+		auth.GET("/:id/status", handlerUser.GetUserById)
+		auth.GET("/leaderboard", handlerUser.GetLeaderboard)
 	}
 
 	r.Run(":8080")
-
-	//e := echo.New()
-	//
-	//e.Use(middleware.Logger())
-	//e.Use(middleware.Recover())
-	//
-	//usersGroup := e.Group("/users")
-	//usersGroup.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-	//	SigningKey: middleware.JwtSecret,
-	//}))
-	//
-	//usersGroup.GET("/:id/status", handlerUser.GetUserById)
-	//usersGroup.GET("/leaderboard", handlerUser.GetLeaderboard)
-	//
-	//if err := e.Start(":8080"); err != nil {
-	//	log.Fatalf("Failed to start with err: %v", err)
-	//}
 }

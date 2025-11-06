@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"user_service/internal/userService"
 )
 
@@ -15,7 +16,14 @@ func NewUserHandler(service userService.UserService) *UserHandler {
 }
 
 func (h *UserHandler) GetUserById(c *gin.Context) {
-	user, err := h.service.GetUserById(c.Param("id"))
+	userIDFromToken := c.GetInt("user_id")
+	requestedID := c.Param("id")
+
+	if strconv.Itoa(userIDFromToken) != requestedID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		return
+	}
+	user, err := h.service.GetUserById(requestedID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
