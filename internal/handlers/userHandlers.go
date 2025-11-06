@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"user_service/internal/userService"
 )
@@ -14,26 +14,20 @@ func NewUserHandler(service userService.UserService) *UserHandler {
 	return &UserHandler{service}
 }
 
-func (h *UserHandler) GetUserById(c echo.Context) error {
-	//idStr := c.Param("id")
-	//id, err := strconv.Atoi(idStr)
-	//if err != nil {
-	//	return echo.NewHTTPError(http.StatusBadRequest, "Invalid user id")
-	//}
-
+func (h *UserHandler) GetUserById(c *gin.Context) {
 	user, err := h.service.GetUserById(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
 	}
-
-	return c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user)
 }
 
-func (h *UserHandler) GetLeaderboard(c echo.Context) error {
+func (h *UserHandler) GetLeaderboard(c *gin.Context) {
 	users, err := h.service.GetLeaderboard()
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-
-	return c.JSON(http.StatusOK, users)
+	c.JSON(http.StatusOK, users)
 }
