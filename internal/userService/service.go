@@ -3,7 +3,6 @@ package userService
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"strconv"
 	"user_service/domain"
 )
 
@@ -29,7 +28,7 @@ func (us *userService) GetUserById(id string) (domain.User, error) {
 func (us *userService) GetLeaderboard() ([]domain.User, error) {
 	users, err := us.repo.GetLeaderboard()
 	if err != nil {
-		logrus.Errorf("[users] Failed to fetch users from DB: %v", err)
+		logrus.Errorf("Failed to fetch users from DB: %v", err)
 		return nil, err
 	}
 
@@ -39,7 +38,7 @@ func (us *userService) GetLeaderboard() ([]domain.User, error) {
 func (us *userService) PostTaskComplete(id string) (domain.User, error) {
 	user, err := us.repo.UpdatePoints(id, 15)
 	if err != nil {
-		logrus.Errorf("[users] Failed to complete task: %v", err)
+		logrus.Errorf("Failed to complete task: %v", err)
 		return domain.User{}, err
 	}
 
@@ -49,26 +48,25 @@ func (us *userService) PostTaskComplete(id string) (domain.User, error) {
 func (us *userService) PostReferrerHandler(userID, referrerID string) ([]domain.User, error) {
 	user, err := us.repo.GetUserById(userID)
 	if err != nil {
-		logrus.Errorf("[users] user not found")
+		logrus.Errorf("User not found")
 		return nil, err
 	}
 	if user.ReferrerID > 0 {
-		logrus.Infof("[users] user %s already has referrer, skipping", userID)
-		referrer, _ := us.repo.GetUserById(strconv.Itoa(user.ReferrerID))
-		return []domain.User{user, referrer}, nil
+		//logrus.Errorf("User %s already has referrer", userID)
+		return nil, fmt.Errorf("User %s already has referrer", userID)
 	}
 	referrer, err := us.repo.GetUserById(referrerID)
 	if err != nil {
-		logrus.Warnf("[users] referrer %s not found", referrerID)
+		logrus.Warnf("Referrer %s not found", referrerID)
 		return nil, fmt.Errorf("referrer not found")
 	}
 
 	if referrer.ReferrerID > 0 && referrer.ReferrerID == user.ID {
-		return nil, fmt.Errorf("cyclic referral is not allowed: user %s is already referrer of %s", referrerID, userID)
+		return nil, fmt.Errorf("Cyclic referral is not allowed: user %s is already referrer of %s", referrerID, userID)
 	}
 
 	if user.ID == referrer.ID {
-		return nil, fmt.Errorf("user cannot refer themselves")
+		return nil, fmt.Errorf("User cannot refer themselves")
 	}
 
 	if err := us.repo.SetReferrer(userID, referrerID); err != nil {

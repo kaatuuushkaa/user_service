@@ -28,7 +28,7 @@ func (u *userRepository) GetUserById(id string) (domain.User, error) {
 
 func (u *userRepository) GetLeaderboard() ([]domain.User, error) {
 	var users []domain.User
-	err := u.db.Select("id, name, points").Order("points DESC").Find(&users).Error
+	err := u.db.Select("id, name, points, referrer_id").Order("points DESC").Find(&users).Error
 	return users, err
 }
 

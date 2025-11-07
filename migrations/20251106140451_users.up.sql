@@ -4,3 +4,6 @@ CREATE TABLE users (
                        points INT DEFAULT 0,
                        referrer_id INTEGER REFERENCES users(id) ON DELETE SET NULL
 );
+
+INSERT INTO users(name)
+VALUES ('Katya'),('Dima'), ('Irina'), ('Misha');

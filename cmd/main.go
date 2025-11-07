@@ -18,7 +18,7 @@ func main() {
 	repoUser := userService.NewUserRepository(database)
 	serviceUser := userService.NewUserService(repoUser)
 	handlerUser := handlers.NewUserHandler(serviceUser)
-	handlerAuth := handlers.NewAuthHandler()
+	handlerAuth := handlers.NewAuthHandler(serviceUser)
 
 	r := gin.Default()
 

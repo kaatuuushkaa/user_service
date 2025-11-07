@@ -41,7 +41,13 @@ func (h *UserHandler) GetLeaderboardHandler(c *gin.Context) {
 }
 
 func (h *UserHandler) PostTaskCompleteHandler(c *gin.Context) {
-	user, err := h.service.PostTaskComplete(c.Param("id"))
+	id := c.Param("id")
+	_, err := h.service.GetUserById(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+	user, err := h.service.PostTaskComplete(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
