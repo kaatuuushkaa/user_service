@@ -42,4 +42,8 @@ Go, gin, gorm, jwt, docker-compose, golang-migrate, postgresql
 
 `make migrate`
 
-
+# Идеи для доработки
+- добавление ролей пользователей для разграничения права доступа
+- middleware для проверки роли
+- добавление MongoDB для хранения заданий и поинтов для них
+- доработка JWT 
