@@ -2,7 +2,8 @@ package domain
 
 type User struct {
 	ID         int    `json:"id"`
-	Name       string `json:"name"`
+	Username   string `json:"username"`
+	Password   string `json:"-"`
 	Points     int    `json:"points"`
-	ReferrerID int    `json:"referrer_id"`
+	ReferrerID *int   `json:"referrer_id"`
 }

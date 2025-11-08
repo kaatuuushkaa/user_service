@@ -1,8 +1,10 @@
 package userService
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 	"user_service/domain"
 )
 
@@ -11,6 +13,8 @@ type UserService interface {
 	GetLeaderboard() ([]domain.User, error)
 	PostTaskComplete(id string) (domain.User, error)
 	PostReferrerHandler(userID, referrerID string) ([]domain.User, error)
+	Login(username, password string) (domain.User, error)
+	Register(username, password string) (domain.User, error)
 }
 
 type userService struct {
@@ -19,6 +23,24 @@ type userService struct {
 
 func NewUserService(repo UserRepository) UserService {
 	return &userService{repo}
+}
+
+func (us *userService) Register(username, password string) (domain.User, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	user := domain.User{
+		Username: username,
+		Password: string(hashedPassword),
+	}
+
+	user, err = us.repo.CreateUser(user)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return user, nil
 }
 
 func (us *userService) GetUserById(id string) (domain.User, error) {
@@ -51,8 +73,7 @@ func (us *userService) PostReferrerHandler(userID, referrerID string) ([]domain.
 		logrus.Errorf("User not found")
 		return nil, err
 	}
-	if user.ReferrerID > 0 {
-		//logrus.Errorf("User %s already has referrer", userID)
+	if user.ReferrerID != nil {
 		return nil, fmt.Errorf("User %s already has referrer", userID)
 	}
 	referrer, err := us.repo.GetUserById(referrerID)
@@ -61,7 +82,7 @@ func (us *userService) PostReferrerHandler(userID, referrerID string) ([]domain.
 		return nil, fmt.Errorf("referrer not found")
 	}
 
-	if referrer.ReferrerID > 0 && referrer.ReferrerID == user.ID {
+	if referrer.ReferrerID != nil && *referrer.ReferrerID == user.ID {
 		return nil, fmt.Errorf("Cyclic referral is not allowed: user %s is already referrer of %s", referrerID, userID)
 	}
 
@@ -84,4 +105,18 @@ func (us *userService) PostReferrerHandler(userID, referrerID string) ([]domain.
 	}
 
 	return []domain.User{updatedUser, updatedReferrer}, nil
+}
+
+func (us *userService) Login(username, password string) (domain.User, error) {
+	user, err := us.repo.GetUserByUsername(username)
+	if err != nil {
+		return domain.User{}, errors.New("user not found")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		fmt.Println(password, user.Password)
+		return domain.User{}, errors.New("invalid password")
+	}
+
+	return user, nil
 }

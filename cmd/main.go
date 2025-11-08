@@ -23,6 +23,7 @@ func main() {
 	r := gin.Default()
 
 	r.POST("/login", handlerAuth.LoginHandler)
+	r.POST("/register", handlerAuth.RegisterHandler)
 
 	users := r.Group("/users")
 	users.Use(middleware.JWTMiddleware())
