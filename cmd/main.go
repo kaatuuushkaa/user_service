@@ -5,6 +5,8 @@ import (
 	"log"
 	"user_service/internal/db"
 	"user_service/internal/handlers"
+	"user_service/internal/http"
+	"user_service/internal/jwt"
 	"user_service/internal/middleware"
 	"user_service/internal/userService"
 )
@@ -17,22 +19,18 @@ func main() {
 
 	repoUser := userService.NewUserRepository(database)
 	serviceUser := userService.NewUserService(repoUser)
+
+	j := jwt.New("supersecret")
 	handlerUser := handlers.NewUserHandler(serviceUser)
-	handlerAuth := handlers.NewAuthHandler(serviceUser)
+	handlerAuth := handlers.NewAuthHandler(serviceUser, j)
 
 	r := gin.Default()
+	http.AuthRoutes(r, *handlerAuth)
 
-	r.POST("/login", handlerAuth.LoginHandler)
-	r.POST("/register", handlerAuth.RegisterHandler)
+	r.Use(middleware.JWTMiddleware(j))
+	http.UserRoutes(r, *handlerUser)
 
-	users := r.Group("/users")
-	users.Use(middleware.JWTMiddleware())
-	{
-		users.GET("/:id/status", handlerUser.GetUserByIdHandler)
-		users.GET("/leaderboard", handlerUser.GetLeaderboardHandler)
-		users.POST("/:id/task/complete", handlerUser.PostTaskCompleteHandler)
-		users.POST("/:id/referrer", handlerUser.PostReferrerHandler)
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal(err)
 	}
-
-	r.Run(":8080")
 }

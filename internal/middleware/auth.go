@@ -1,45 +1,52 @@
 package middleware
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"strings"
+	"time"
+	appjwt "user_service/internal/jwt"
 )
 
-var JwtSecret = []byte("supersecret")
-
-func JWTMiddleware() gin.HandlerFunc {
+func JWTMiddleware(j appjwt.IJWT) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing Authorization header"})
 			return
 		}
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization header"})
-			return
-		}
 
-		tokenString := parts[1]
+		accessToken := strings.TrimPrefix(authHeader, "Bearer ")
 
-		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, gin.Error{Err: errors.New("unexpected signing method"), Type: gin.ErrorTypePrivate}
+		claims, err := j.ParseJWT(accessToken)
+		if err != nil {
+			if err == appjwt.ErrTokenExpired {
+				refreshCookie, err := c.Cookie("REFRESH_TOKEN")
+				if err != nil {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "refresh token not found"})
+					return
+				}
+
+				newAccess, exp, err := j.RefreshAccessToken(refreshCookie)
+				if err != nil {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "refresh token invalid"})
+					return
+				}
+
+				c.Header("X-New-Access-Token", newAccess)
+				c.SetCookie("ACCESS_TOKEN", newAccess, int(exp.Sub(time.Now()).Seconds()), "/", "", false, true)
+
+				claims, err = j.ParseJWT(newAccess)
+				if err != nil {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "failed to parse new access token"})
+					return
+				}
 			}
-			return JwtSecret, nil
-		})
-
-		if err != nil || !token.Valid {
+		} else {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
-
-		claims := token.Claims.(jwt.MapClaims)
-		userID := int(claims["user_id"].(float64))
-		c.Set("user_id", userID)
+		c.Set("user_id", claims.ID)
 
 		c.Next()
 	}

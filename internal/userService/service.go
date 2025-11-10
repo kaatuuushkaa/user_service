@@ -1,7 +1,7 @@
 package userService
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -32,8 +32,8 @@ func (us *userService) Register(username, password string) (domain.User, error) 
 	}
 
 	user := domain.User{
-		Username: username,
-		Password: string(hashedPassword),
+		Username:        username,
+		Hashed_password: string(hashedPassword),
 	}
 
 	user, err = us.repo.CreateUser(user)
@@ -110,12 +110,13 @@ func (us *userService) PostReferrerHandler(userID, referrerID string) ([]domain.
 func (us *userService) Login(username, password string) (domain.User, error) {
 	user, err := us.repo.GetUserByUsername(username)
 	if err != nil {
-		return domain.User{}, errors.New("user not found")
+		return domain.User{}, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		fmt.Println(password, user.Password)
-		return domain.User{}, errors.New("invalid password")
+	//не сравнивать, не извлекать строковые данные, а проверить на равенство и вернуть true/false
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Hashed_password), []byte(password)); err != nil {
+		fmt.Println(password, user.Hashed_password)
+		return domain.User{}, err
 	}
 
 	return user, nil

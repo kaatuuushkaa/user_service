@@ -2,19 +2,22 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
+	appjwt "user_service/internal/jwt"
+
+	//"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"time"
-	"user_service/internal/middleware"
+	//"user_service/internal/jwt"
 	"user_service/internal/userService"
 )
 
 type AuthHandler struct {
 	service userService.UserService
+	jwt     appjwt.IJWT
 }
 
-func NewAuthHandler(service userService.UserService) *AuthHandler {
-	return &AuthHandler{service}
+func NewAuthHandler(service userService.UserService, jwt appjwt.IJWT) *AuthHandler {
+	return &AuthHandler{service: service, jwt: jwt}
 }
 
 func (h *AuthHandler) RegisterHandler(c *gin.Context) {
@@ -50,30 +53,17 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	user, err := h.service.Login(body.Username, body.Password)
 	if err != nil {
-		switch err.Error() {
-		case "user not found":
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		case "invalid password":
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		}
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
-	})
+	accessToken := h.jwt.GenerateJWT(user.ID, true, appjwt.Minute*10)
+	refreshToken, expAfter := h.jwt.GenerateRefreshToken(user.ID, true, appjwt.SixMonth)
 
-	tokenString, err := token.SignedString(middleware.JwtSecret)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create token"})
-		return
-	}
+	c.SetCookie("REFRESH_TOKEN", refreshToken, int(expAfter.Sub(time.Now()).Seconds()), "/", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Login successful",
-		"access_token": tokenString,
+		"access_token": accessToken,
 	})
 }
