@@ -10,7 +10,6 @@ type UserRepository interface {
 	GetLeaderboard() ([]domain.User, error)
 	UpdatePoints(userID string, points int) (domain.User, error)
 	SetReferrer(userID, referrerID string) error
-	//Login(username, password string) (domain.User, error)
 	GetUserByUsername(username string) (domain.User, error)
 	CreateUser(user domain.User) (domain.User, error)
 }

@@ -1,7 +1,6 @@
 package userService
 
 import (
-	//"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -13,8 +12,8 @@ type UserService interface {
 	GetLeaderboard() ([]domain.User, error)
 	PostTaskComplete(id string) (domain.User, error)
 	PostReferrerHandler(userID, referrerID string) ([]domain.User, error)
-	Login(username, password string) (domain.User, error)
-	Register(username, password string) (domain.User, error)
+	SignIn(username, password string) (domain.User, error)
+	SignUp(username, password string) (domain.User, error)
 }
 
 type userService struct {
@@ -25,7 +24,7 @@ func NewUserService(repo UserRepository) UserService {
 	return &userService{repo}
 }
 
-func (us *userService) Register(username, password string) (domain.User, error) {
+func (us *userService) SignUp(username, password string) (domain.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return domain.User{}, err
@@ -107,13 +106,12 @@ func (us *userService) PostReferrerHandler(userID, referrerID string) ([]domain.
 	return []domain.User{updatedUser, updatedReferrer}, nil
 }
 
-func (us *userService) Login(username, password string) (domain.User, error) {
+func (us *userService) SignIn(username, password string) (domain.User, error) {
 	user, err := us.repo.GetUserByUsername(username)
 	if err != nil {
 		return domain.User{}, err
 	}
 
-	//не сравнивать, не извлекать строковые данные, а проверить на равенство и вернуть true/false
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Hashed_password), []byte(password)); err != nil {
 		fmt.Println(password, user.Hashed_password)
 		return domain.User{}, err

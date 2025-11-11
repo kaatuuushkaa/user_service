@@ -8,8 +8,8 @@ import (
 func AuthRoutes(r *gin.Engine, handler handlers.AuthHandler) {
 	auth := r.Group("/auth")
 
-	auth.POST("/login", handler.LoginHandler)
-	auth.POST("/register", handler.RegisterHandler)
+	auth.POST("/signin", handler.SignInHandler)
+	auth.POST("/signup", handler.SignUpHandler)
 }
 
 func UserRoutes(r *gin.Engine, handler handlers.UserHandler) {

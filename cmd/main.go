@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"log"
+	"os"
 	"user_service/internal/db"
 	"user_service/internal/handlers"
 	"user_service/internal/http"
@@ -20,7 +21,8 @@ func main() {
 	repoUser := userService.NewUserRepository(database)
 	serviceUser := userService.NewUserService(repoUser)
 
-	j := jwt.New("supersecret")
+	key := os.Getenv("JWT_KEY")
+	j := jwt.New(key)
 	handlerUser := handlers.NewUserHandler(serviceUser)
 	handlerAuth := handlers.NewAuthHandler(serviceUser, j)
 

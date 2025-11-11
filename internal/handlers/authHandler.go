@@ -2,12 +2,9 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	appjwt "user_service/internal/jwt"
-
-	//"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"time"
-	//"user_service/internal/jwt"
+	appjwt "user_service/internal/jwt"
 	"user_service/internal/userService"
 )
 
@@ -20,7 +17,7 @@ func NewAuthHandler(service userService.UserService, jwt appjwt.IJWT) *AuthHandl
 	return &AuthHandler{service: service, jwt: jwt}
 }
 
-func (h *AuthHandler) RegisterHandler(c *gin.Context) {
+func (h *AuthHandler) SignUpHandler(c *gin.Context) {
 	var body struct {
 		Username string `json:"Username"`
 		Password string `json:"Password"`
@@ -29,7 +26,7 @@ func (h *AuthHandler) RegisterHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	user, err := h.service.Register(body.Username, body.Password)
+	user, err := h.service.SignUp(body.Username, body.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -42,7 +39,7 @@ func (h *AuthHandler) RegisterHandler(c *gin.Context) {
 	})
 }
 
-func (h *AuthHandler) LoginHandler(c *gin.Context) {
+func (h *AuthHandler) SignInHandler(c *gin.Context) {
 	var body struct {
 		Username string `json:"Username"`
 		Password string `json:"Password"`
@@ -51,7 +48,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	user, err := h.service.Login(body.Username, body.Password)
+	user, err := h.service.SignIn(body.Username, body.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
 		return
