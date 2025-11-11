@@ -5,33 +5,47 @@
 ---
 
 ## Основные возможности
-- `POST /login` - получение access token(JWT) для дальнейшей авторизации пользователя
-<img width="750" height="595" alt="image" src="https://github.com/user-attachments/assets/44296170-3935-4266-95d2-3596ced7845b" />
-Обработана ситуация с несуществующим пользователем
-<img width="752" height="569" alt="image" src="https://github.com/user-attachments/assets/6d796242-e3b0-4255-88f7-9ae351b4caca" />
+- `POST /auth/signup` - регистрация пользователя
+<img width="761" height="578" alt="image" src="https://github.com/user-attachments/assets/d6f03890-3c6a-4bf6-bf49-2cfbf42cd989" />
+
+
+- `POST /auth/signin` - получение access token(JWT) для дальнейшей авторизации пользователя
+<img width="758" height="612" alt="image" src="https://github.com/user-attachments/assets/791a4f64-e190-4c37-abbc-4b603bd50e68" />
+
+Обработана ситуация с несуществующим пользователем или неправильным паролем
+<img width="761" height="574" alt="image" src="https://github.com/user-attachments/assets/3b0e0852-8ead-4252-a471-62e3484ff102" />
 
 - `GET /users/{id}/status` - получение всей доступной информации о пользователе
-<img width="756" height="614" alt="image" src="https://github.com/user-attachments/assets/58bc33c3-e443-4cfb-a456-515e072aa098" />
-С полученным токеном мы можем посмотреть информацию только о том пользователе, которому принадлежит токен
-<img width="751" height="554" alt="image" src="https://github.com/user-attachments/assets/b6b9cd27-b101-4c5a-9ad5-1dfd515c5ea7" />
+<img width="757" height="572" alt="image" src="https://github.com/user-attachments/assets/0f5a7a5a-0d25-4d97-b6a3-e24edd8cacdd" />
 
 - `GET /users/leaderboard` - получение топа пользователей с самым большим балансом
-<img width="751" height="749" alt="image" src="https://github.com/user-attachments/assets/f8bda2e4-8e1e-4318-9abe-7e5ed8b96965" />
+<img width="757" height="642" alt="image" src="https://github.com/user-attachments/assets/d3d34936-59d0-4471-b11a-ef04447d222c" />
+
+
 
 - `POST /users/{id}/task/complete` - выполнение заданий
-<img width="747" height="622" alt="image" src="https://github.com/user-attachments/assets/f6687318-8f59-4f91-ba64-2c512a0eca79" />
+<img width="757" height="598" alt="image" src="https://github.com/user-attachments/assets/2fb414b4-843d-406f-a853-a44d9cb7c105" />
+
 Если пользователя не существует - получим ошибку
-<img width="756" height="626" alt="image" src="https://github.com/user-attachments/assets/b3082b6c-ddf6-413b-8ee2-a588dad7b22d" />
+<img width="749" height="508" alt="image" src="https://github.com/user-attachments/assets/b846747b-01df-475c-93c0-6ea34753376a" />
+
 
 - `POST /users/{id}/referrer` - ввод реферального кода (может быть id другого пользователя)
-<img width="749" height="756" alt="image" src="https://github.com/user-attachments/assets/c825060a-4db5-46b3-88a9-8a9513fc5c54" />
+<img width="749" height="651" alt="image" src="https://github.com/user-attachments/assets/344d0519-1eab-428d-8bd0-2c35263ebdb2" />
+
 Реализована идемпотентность работы с реферальным кодом. При повторном вызове, баллы не изменятся и придет уведомление, что пользователь уже использовал рефералку
-<img width="753" height="572" alt="image" src="https://github.com/user-attachments/assets/f9fb1cb7-8803-4866-985d-286ee056b462" />
+<img width="755" height="530" alt="image" src="https://github.com/user-attachments/assets/2378d483-b520-4d78-b814-dd14b60bc553" />
+
 Пользователь не может зарефералить себя сам
-<img width="746" height="582" alt="image" src="https://github.com/user-attachments/assets/5d137678-5584-425f-9cbc-e55016535ef3" />
+<img width="762" height="572" alt="image" src="https://github.com/user-attachments/assets/c3982c32-abaa-4ffc-a551-1f815d50b95a" />
+
 
 # Стек
-Go, gin, gorm, jwt, docker-compose, golang-migrate, postgresql
+Go 1.23+
+Gin (github.com/gin-gonic/gin)
+Gorm Driver Postgres (gorm.io/driver/postgres)
+JWT (github.com/golang-jwt/jwt/v5)
+BCrypt (golang.org/x/crypto/bcrypt)
 
 # Запуск проекта
 `docker-compose up --build`
@@ -43,7 +57,8 @@ Go, gin, gorm, jwt, docker-compose, golang-migrate, postgresql
 `make migrate`
 
 # Идеи для доработки
-- добавление ролей пользователей для разграничения права доступа
+- добавить роли пользователей для разграничения права доступа
 - middleware для проверки роли
-- добавление MongoDB для хранения заданий и поинтов для них
-- доработка JWT 
+- CRUD для задач
+- добавить Redis для хэширования часто запрашиваемых данных
+- добавить Kafka для обеспечения пропускной способности, есди запросы будут расти
